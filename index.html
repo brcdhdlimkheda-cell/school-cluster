@@ -39,7 +39,7 @@
   </table>
 
   <script>
-    // 👉 તમારું Sheet ID અહીં નાખેલું છે
+    // 👉 તમારું Sheet ID link
     const sheetUrl = "https://docs.google.com/spreadsheets/d/1topaEo86sHDVPVXeLwkX7t3MOVscreNM8osUcyy8a1U/gviz/tq?tqx=out:json";
 
     async function loadData() {
@@ -51,7 +51,7 @@
       const clusterSet = new Set();
 
       json.table.rows.forEach(row => {
-        const cluster = row.c[0]?.v ? row.c[0].v.trim() : "";
+        const cluster = row.c[0]?.v ? row.c[0].v.trim().toUpperCase() : "";
         const school = row.c[1]?.v || "";
         const task = row.c[2]?.v || "";
         const due = row.c[3]?.v || "";
@@ -72,7 +72,7 @@
         clusterSet.add(cluster);
       });
 
-      // Dropdown auto-populate (sorted)
+      // Dropdown auto-populate (sorted list)
       const clusterFilter = document.getElementById("clusterFilter");
       Array.from(clusterSet).sort().forEach(c => {
         const opt = document.createElement("option");
@@ -86,7 +86,7 @@
       const filter = document.getElementById("clusterFilter").value;
       const rows = document.querySelectorAll("#taskTable tbody tr");
       rows.forEach(row => {
-        const cluster = row.cells[0].textContent;
+        const cluster = row.cells[0].textContent.trim().toUpperCase();
         row.style.display = (filter === "all" || cluster === filter) ? "" : "none";
       });
     }
