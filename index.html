@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+  <meta charset="UTF-8">
+  <title>ક્લસ્ટર મુજબ શાળાની બાકી કામગીરી</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h1 { text-align: center; }
+    select { margin: 10px; padding: 5px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    th { background: #f2f2f2; }
+    .pending { background-color: #ffcccc; }   /* લાલ */
+    .completed { background-color: #ccffcc; } /* લીલો */
+  </style>
+</head>
+<body>
+  <h1>ક્લસ્ટર મુજબ શાળાની બાકી કામગીરી</h1>
+
+  <!-- Dropdown for Cluster Filter -->
+  <label for="clusterFilter">Cluster પસંદ કરો:</label>
+  <select id="clusterFilter" onchange="filterCluster()">
+    <option value="all">બધા</option>
+  </select>
+
+  <!-- Table -->
+  <table id="taskTable">
+    <thead>
+      <tr>
+        <th>Cluster</th>
+        <th>School</th>
+        <th>Task Description</th>
+        <th>Due Date</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    // 👉 અહીં તમારું Google Sheet publish થયેલું CSV link નાખો
+    const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQGulYFzudQb4zI_7AjYPyWW-31zTvR1XF8cDiYO2iGlKWwVsLEmC-GoQdAj2whxqPlptOq3iCFn922/pub?output=csv";
+
+    async function loadData() {
+      const response = await fetch(sheetUrl);
+      const data = await response.text();
+      const rows = data.split("\n").map(r => r.split(","));
+      
+      const tbody = document.querySelector("#taskTable tbody");
+      const clusterSet = new Set();
+
+      rows.slice(1).forEach(r => {
+        if (r.length < 5) return;
+        const tr = document.createElement("tr");
+        const statusClass = r[4].trim().toLowerCase() === "pending" ? "pending" : "completed";
+        tr.innerHTML = `
+          <td>${r[0]}</td>
+          <td>${r[1]}</td>
+          <td>${r[2]}</td>
+          <td>${r[3]}</td>
+          <td class="${statusClass}">${r[4]}</td>
+        `;
+        tbody.appendChild(tr);
+        clusterSet.add(r[0]);
+      });
+
+      // Populate dropdown
+      const clusterFilter = document.getElementById("clusterFilter");
+      clusterSet.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c;
+        opt.textContent = c;
+        clusterFilter.appendChild(opt);
+      });
+    }
+
+    function filterCluster() {
+      const filter = document.getElementById("clusterFilter").value;
+      const rows = document.querySelectorAll("#taskTable tbody tr");
+      rows.forEach(row => {
+        const cluster = row.cells[0].textContent;
+        row.style.display = (filter === "all" || cluster === filter) ? "" : "none";
+      });
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
