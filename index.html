@@ -39,23 +39,25 @@
   </table>
 
   <script>
-    // 👉 અહીં તમારું Sheet ID નાખો
+    // 👉 તમારું Sheet ID અહીં નાખેલું છે
     const sheetUrl = "https://docs.google.com/spreadsheets/d/1topaEo86sHDVPVXeLwkX7t3MOVscreNM8osUcyy8a1U/gviz/tq?tqx=out:json";
 
     async function loadData() {
       const response = await fetch(sheetUrl);
       const text = await response.text();
-      const json = JSON.parse(text.substr(47).slice(0, -2)); // Google JSON parse trick
+      const json = JSON.parse(text.substr(47).slice(0, -2));
 
       const tbody = document.querySelector("#taskTable tbody");
       const clusterSet = new Set();
 
       json.table.rows.forEach(row => {
-        const cluster = row.c[0]?.v || "";
+        const cluster = row.c[0]?.v ? row.c[0].v.trim() : "";
         const school = row.c[1]?.v || "";
         const task = row.c[2]?.v || "";
         const due = row.c[3]?.v || "";
         const status = row.c[4]?.v || "";
+
+        if (!cluster) return; // ખાલી cluster skip
 
         const tr = document.createElement("tr");
         const statusClass = status.toLowerCase() === "pending" ? "pending" : "completed";
@@ -67,12 +69,12 @@
           <td class="${statusClass}">${status}</td>
         `;
         tbody.appendChild(tr);
-        if (cluster) clusterSet.add(cluster);
+        clusterSet.add(cluster);
       });
 
-      // Populate dropdown
+      // Dropdown auto-populate (sorted)
       const clusterFilter = document.getElementById("clusterFilter");
-      clusterSet.forEach(c => {
+      Array.from(clusterSet).sort().forEach(c => {
         const opt = document.createElement("option");
         opt.value = c;
         opt.textContent = c;
