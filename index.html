@@ -39,30 +39,35 @@
   </table>
 
   <script>
-    // 👉 અહીં તમારું Google Sheet publish થયેલું CSV link નાખો
+    // 👉 અહીં તમારું Sheet ID નાખો
     const sheetUrl = "https://docs.google.com/spreadsheets/d/1topaEo86sHDVPVXeLwkX7t3MOVscreNM8osUcyy8a1U/gviz/tq?tqx=out:json";
 
     async function loadData() {
       const response = await fetch(sheetUrl);
-      const data = await response.text();
-      const rows = data.split("\n").map(r => r.split(","));
-      
+      const text = await response.text();
+      const json = JSON.parse(text.substr(47).slice(0, -2)); // Google JSON parse trick
+
       const tbody = document.querySelector("#taskTable tbody");
       const clusterSet = new Set();
 
-      rows.slice(1).forEach(r => {
-        if (r.length < 5) return;
+      json.table.rows.forEach(row => {
+        const cluster = row.c[0]?.v || "";
+        const school = row.c[1]?.v || "";
+        const task = row.c[2]?.v || "";
+        const due = row.c[3]?.v || "";
+        const status = row.c[4]?.v || "";
+
         const tr = document.createElement("tr");
-        const statusClass = r[4].trim().toLowerCase() === "pending" ? "pending" : "completed";
+        const statusClass = status.toLowerCase() === "pending" ? "pending" : "completed";
         tr.innerHTML = `
-          <td>${r[0]}</td>
-          <td>${r[1]}</td>
-          <td>${r[2]}</td>
-          <td>${r[3]}</td>
-          <td class="${statusClass}">${r[4]}</td>
+          <td>${cluster}</td>
+          <td>${school}</td>
+          <td>${task}</td>
+          <td>${due}</td>
+          <td class="${statusClass}">${status}</td>
         `;
         tbody.appendChild(tr);
-        clusterSet.add(r[0]);
+        if (cluster) clusterSet.add(cluster);
       });
 
       // Populate dropdown
