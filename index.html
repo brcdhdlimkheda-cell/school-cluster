@@ -59,3 +59,45 @@
           <td>${cluster}</td>
           <td>${school}</td>
           <td>${task}</td>
+          <td>${due}</td>
+          <td class="${statusClass}">${status}</td>
+        `;
+        allRows.push(tr);
+        clusterSet.add(cluster);
+      });
+
+      // Dropdown auto-populate
+      const clusterFilter = document.getElementById("clusterFilter");
+      Array.from(clusterSet).sort().forEach(c => {
+        if (c) {
+          const opt = document.createElement("option");
+          opt.value = c;
+          opt.textContent = c;
+          clusterFilter.appendChild(opt);
+        }
+      });
+
+      // Table initially empty
+      document.querySelector("#taskTable tbody").innerHTML = "";
+      window.allRows = allRows;
+    }
+
+    function filterCluster() {
+      const filter = document.getElementById("clusterFilter").value;
+      const tbody = document.querySelector("#taskTable tbody");
+      tbody.innerHTML = "";
+
+      if (!filter) return; // blank → no rows
+
+      window.allRows.forEach(row => {
+        const cluster = row.cells[0].textContent.trim().toUpperCase();
+        if (cluster === filter) {
+          tbody.appendChild(row.cloneNode(true));
+        }
+      });
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
