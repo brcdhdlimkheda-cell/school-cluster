@@ -1,86 +1,79 @@
-<body>
-  <h1>ક્લસ્ટર મુજબ શાળાની બાકી કામગીરી</h1>
+<label for="clusterFilter">Cluster પસંદ કરો:</label>
+<select id="clusterFilter" onchange="filterCluster()">
+  <option value="">-- પસંદ કરો --</option>
+</select>
 
-  <label for="clusterFilter">Cluster પસંદ કરો:</label>
-  <select id="clusterFilter" onchange="filterCluster()">
-    <option value="">-- પસંદ કરો --</option>
-    <option value="all">બધા</option>
-  </select>
+<table id="taskTable">
+  <thead>
+    <tr>
+      <th>Cluster</th>
+      <th>School</th>
+      <th>Task Description</th>
+      <th>Due Date</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
 
-  <table id="taskTable">
-    <thead>
-      <tr>
-        <th>Cluster</th>
-        <th>School</th>
-        <th>Task Description</th>
-        <th>Due Date</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+<script>
+async function loadData() {
+  const response = await fetch("YOUR_JSON_LINK");
+  const text = await response.text();
+  const json = JSON.parse(text.substr(47).slice(0, -2));
 
-  <script>
-    const sheetUrl = "YOUR_JSON_LINK";
+  const clusterSet = new Set();
+  const allRows = [];
 
-    async function loadData() {
-      const response = await fetch(sheetUrl);
-      const text = await response.text();
-      const json = JSON.parse(text.substr(47).slice(0, -2));
+  json.table.rows.forEach(row => {
+    const cluster = row.c[0]?.v ? row.c[0].v.trim().toUpperCase() : "";
+    const school = row.c[1]?.v || "";
+    const task = row.c[2]?.v || "";
+    const due = row.c[3]?.v || "";
+    const status = row.c[4]?.v || "";
 
-      const tbody = document.querySelector("#taskTable tbody");
-      const clusterSet = new Set();
-      const allRows = [];
+    if (!cluster) return;
 
-      json.table.rows.forEach(row => {
-        const cluster = row.c[0]?.v ? row.c[0].v.trim().toUpperCase() : "";
-        const school = row.c[1]?.v || "";
-        const task = row.c[2]?.v || "";
-        const due = row.c[3]?.v || "";
-        const status = row.c[4]?.v || "";
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${cluster}</td>
+      <td>${school}</td>
+      <td>${task}</td>
+      <td>${due}</td>
+      <td>${status}</td>
+    `;
+    allRows.push(tr);
+    clusterSet.add(cluster);
+  });
 
-        if (!cluster) return;
+  // Dropdown populate
+  const clusterFilter = document.getElementById("clusterFilter");
+  Array.from(clusterSet).sort().forEach(c => {
+    const opt = document.createElement("option");
+    opt.value = c;
+    opt.textContent = c;
+    clusterFilter.appendChild(opt);
+  });
 
-        const tr = document.createElement("tr");
-        const statusClass = status.toLowerCase() === "pending" ? "pending" : "completed";
-        tr.innerHTML = `
-          <td>${cluster}</td>
-          <td>${school}</td>
-          <td>${task}</td>
-          <td>${due}</td>
-          <td class="${statusClass}">${status}</td>
-        `;
-        allRows.push(tr);
-        clusterSet.add(cluster);
-      });
+  // Table initially empty
+  document.querySelector("#taskTable tbody").innerHTML = "";
+  window.allRows = allRows;
+}
 
-      // Dropdown auto-populate
-      const clusterFilter = document.getElementById("clusterFilter");
-      Array.from(clusterSet).sort().forEach(c => {
-        const opt = document.createElement("option");
-        opt.value = c;
-        opt.textContent = c;
-        clusterFilter.appendChild(opt);
-      });
+function filterCluster() {
+  const filter = document.getElementById("clusterFilter").value;
+  const tbody = document.querySelector("#taskTable tbody");
+  tbody.innerHTML = "";
 
-      // Table initially empty
-      tbody.innerHTML = "";
-      window.allRows = allRows;
+  if (!filter) return; // blank → no rows
+
+  window.allRows.forEach(row => {
+    const cluster = row.cells[0].textContent.trim().toUpperCase();
+    if (cluster === filter) {
+      tbody.appendChild(row.cloneNode(true));
     }
+  });
+}
 
-    function filterCluster() {
-      const filter = document.getElementById("clusterFilter").value;
-      const tbody = document.querySelector("#taskTable tbody");
-      tbody.innerHTML = "";
-
-      window.allRows.forEach(row => {
-        const cluster = row.cells[0].textContent.trim().toUpperCase();
-        if (filter === "all" || cluster === filter) {
-          tbody.appendChild(row.cloneNode(true));
-        }
-      });
-    }
-
-    loadData();
-  </script>
-</body>
+loadData();
+</script>
