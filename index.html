@@ -46,7 +46,7 @@ async function loadData() {
     clusterSet.add(cluster);
   });
 
-  // Dropdown populate
+  // Dropdown auto-populate
   const clusterFilter = document.getElementById("clusterFilter");
   Array.from(clusterSet).sort().forEach(c => {
     const opt = document.createElement("option");
