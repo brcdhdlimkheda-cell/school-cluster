@@ -34,7 +34,8 @@
   </table>
 
   <script>
-    const sheetUrl = "YOUR_JSON_LINK"; // અહીં તમારો Google Sheet JSON link મૂકો
+    // અહીં actual JSON link મૂકો
+    const sheetUrl = "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/gviz/tq?tqx=out:json";
 
     async function loadData() {
       const response = await fetch(sheetUrl);
