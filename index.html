@@ -10,6 +10,7 @@
     th { background-color: #f2f2f2; }
     .pending { color: red; font-weight: bold; }
     .completed { color: green; font-weight: bold; }
+    button { margin-top: 15px; padding: 8px 12px; }
   </style>
 </head>
 <body>
@@ -19,6 +20,8 @@
   <select id="clusterFilter" onchange="filterCluster()">
     <option value="">-- પસંદ કરો --</option>
   </select>
+
+  <button onclick="exportPDF()">Export PDF</button>
 
   <table id="taskTable">
     <thead>
@@ -33,8 +36,11 @@
     <tbody></tbody>
   </table>
 
+  <!-- jsPDF + autoTable libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
   <script>
-    // ✅ અહીં publish થયેલી JSON link મૂકો
     const sheetUrl = "https://docs.google.com/spreadsheets/d/1topaEo86sHDVPVXeLwkX7t3MOVscreNM8osUcyy8a1U/gviz/tq?tqx=out:json&sheet=Sheet1";
 
     async function loadData() {
@@ -67,7 +73,6 @@
         clusterSet.add(cluster);
       });
 
-      // Dropdown auto-populate
       const clusterFilter = document.getElementById("clusterFilter");
       Array.from(clusterSet).sort().forEach(c => {
         if (c) {
@@ -78,7 +83,6 @@
         }
       });
 
-      // Table initially empty
       document.querySelector("#taskTable tbody").innerHTML = "";
       window.allRows = allRows;
     }
@@ -88,7 +92,7 @@
       const tbody = document.querySelector("#taskTable tbody");
       tbody.innerHTML = "";
 
-      if (!filter) return; // blank → no rows
+      if (!filter) return;
 
       window.allRows.forEach(row => {
         const cluster = row.cells[0].textContent.trim().toUpperCase();
@@ -96,6 +100,16 @@
           tbody.appendChild(row.cloneNode(true));
         }
       });
+    }
+
+    function exportPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      doc.text("Cluster School Tasks", 14, 16);
+      doc.autoTable({ html: '#taskTable' });
+
+      doc.save("Cluster_Tasks.pdf");
     }
 
     loadData();
