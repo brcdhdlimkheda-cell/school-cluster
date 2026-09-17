@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Cluster School Tasks</title>
   <style>
-    body { font-family: 'Noto Sans Gujarati', sans-serif; margin: 20px; }
+    body { font-family: Arial, sans-serif; margin: 20px; }
     table { border-collapse: collapse; width: 100%; margin-top: 20px; }
     th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
     th { background-color: #f2f2f2; }
@@ -12,8 +12,6 @@
     .completed { color: green; font-weight: bold; }
     button { margin-top: 15px; padding: 8px 12px; }
   </style>
-  <!-- ✅ Google Gujarati font for browser -->
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Gujarati&display=swap" rel="stylesheet">
 </head>
 <body>
   <h2>ક્લસ્ટર મુજબ શાળાની બાકી કામગીરી</h2>
@@ -43,59 +41,55 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
   <script>
-    const { jsPDF } = window.jspdf;
-
-    // ✅ Gujarati font Base64 data (short demo string, replace with full Base64 from .ttf)
-    const gujaratiFontData = "AAEAAAALAIAAAwAwT1MvMg8S..."; // અહીં full Base64 string મૂકો
-
-    // ✅ Register Gujarati font
-    jsPDF.API.addFileToVFS("NotoSansGujarati.ttf", gujaratiFontData);
-    jsPDF.API.addFont("NotoSansGujarati.ttf", "NotoSansGujarati", "normal");
-
-    // ✅ Publish થયેલી JSON link મૂકો
-    const sheetUrl = "https://docs.google.com/spreadsheets/d/XXXXXX/gviz/tq?tqx=out:json&sheet=Sheet1";
+    // ✅ Publish થયેલી JSON link મૂકો (tab name સાચું હોવું જોઈએ)
+    const sheetUrl = "https://docs.google.com/spreadsheets/d/1topaEo86sHDVPVXeLwkX7t3MOVscreNM8osUcyy8a1U/gviz/tq?tqx=out:json&sheet=ClusterData";
 
     async function loadData() {
-      const response = await fetch(sheetUrl);
-      const text = await response.text();
-      const json = JSON.parse(text.substr(47).slice(0, -2));
+      try {
+        const response = await fetch(sheetUrl);
+        const text = await response.text();
+        const json = JSON.parse(text.substr(47).slice(0, -2));
 
-      const clusterSet = new Set();
-      const allRows = [];
+        const clusterSet = new Set();
+        const allRows = [];
 
-      json.table.rows.forEach(row => {
-        const cluster = row.c[0]?.v ? row.c[0].v.trim().toUpperCase() : "";
-        const school = row.c[1]?.v || "";
-        const task = row.c[2]?.v || "";
-        const due = row.c[3]?.v || "";
-        const status = row.c[4]?.v || "";
+        json.table.rows.forEach(row => {
+          const cluster = row.c[0]?.v ? row.c[0].v.trim().toUpperCase() : "";
+          const school = row.c[1]?.v || "";
+          const task = row.c[2]?.v || "";
+          const due = row.c[3]?.v || "";
+          const status = row.c[4]?.v || "";
 
-        if (!cluster) return;
+          if (!cluster) return;
 
-        const tr = document.createElement("tr");
-        const statusClass = status.toLowerCase() === "pending" ? "pending" : "completed";
-        tr.innerHTML = `
-          <td>${cluster}</td>
-          <td>${school}</td>
-          <td>${task}</td>
-          <td>${due}</td>
-          <td class="${statusClass}">${status}</td>
-        `;
-        allRows.push(tr);
-        clusterSet.add(cluster);
-      });
+          const tr = document.createElement("tr");
+          const statusClass = status.toLowerCase() === "pending" ? "pending" : "completed";
+          tr.innerHTML = `
+            <td>${cluster}</td>
+            <td>${school}</td>
+            <td>${task}</td>
+            <td>${due}</td>
+            <td class="${statusClass}">${status}</td>
+          `;
+          allRows.push(tr);
+          clusterSet.add(cluster);
+        });
 
-      const clusterFilter = document.getElementById("clusterFilter");
-      clusterFilter.innerHTML = '<option value="">-- પસંદ કરો --</option>';
-      Array.from(clusterSet).sort().forEach(c => {
-        const opt = document.createElement("option");
-        opt.value = c;
-        opt.textContent = c;
-        clusterFilter.appendChild(opt);
-      });
+        // ✅ Dropdown reset + populate
+        const clusterFilter = document.getElementById("clusterFilter");
+        clusterFilter.innerHTML = '<option value="">-- પસંદ કરો --</option>';
+        Array.from(clusterSet).sort().forEach(c => {
+          const opt = document.createElement("option");
+          opt.value = c;
+          opt.textContent = c;
+          clusterFilter.appendChild(opt);
+        });
 
-      document.querySelector("#taskTable tbody").innerHTML = "";
-      window.allRows = allRows;
+        document.querySelector("#taskTable tbody").innerHTML = "";
+        window.allRows = allRows;
+      } catch (err) {
+        console.error("Error loading data:", err);
+      }
     }
 
     function filterCluster() {
@@ -114,10 +108,10 @@
     }
 
     function exportFilteredPDF() {
+      const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
-      doc.setFont("NotoSansGujarati"); // ✅ Gujarati font set
 
-      doc.text("ક્લસ્ટર મુજબ શાળાની બાકી કામગીરી", 14, 16);
+      doc.text("Cluster School Tasks", 14, 16);
 
       const rows = Array.from(document.querySelectorAll("#taskTable tbody tr")).map(tr =>
         Array.from(tr.cells).map(td => td.textContent)
@@ -128,4 +122,17 @@
         return;
       }
 
-      doc
+      doc.autoTable({
+        head: [['Cluster', 'School', 'Task Description', 'Due Date', 'Status']],
+        body: rows,
+        startY: 25
+      });
+
+      doc.save("Filtered_Cluster_Tasks.pdf");
+    }
+
+    // ✅ First load
+    loadData();
+  </script>
+</body>
+</html>
