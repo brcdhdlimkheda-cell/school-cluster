@@ -10,6 +10,7 @@
     th { background-color: #f2f2f2; }
     .pending { color: red; font-weight: bold; }
     .completed { color: green; font-weight: bold; }
+    button { margin-top: 15px; padding: 8px 12px; }
   </style>
 </head>
 <body>
@@ -19,6 +20,8 @@
   <select id="clusterFilter" onchange="filterCluster()">
     <option value="">-- પસંદ કરો --</option>
   </select>
+
+  <button onclick="exportFilteredPDF()">Export Filtered PDF</button>
 
   <table id="taskTable">
     <thead>
@@ -33,9 +36,13 @@
     <tbody></tbody>
   </table>
 
+  <!-- jsPDF + autoTable libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
   <script>
-    // ✅ અહીં publish થયેલી JSON link મૂકો
-    const sheetUrl = "https://docs.google.com/spreadsheets/d/1topaEo86sHDVPVXeLwkX7t3MOVscreNM8osUcyy8a1U/gviz/tq?tqx=out:json&sheet=Sheet1";
+    // ✅ Publish થયેલી JSON link મૂકો (tab name સાચું હોવું જોઈએ)
+    const sheetUrl = "https://docs.google.com/spreadsheets/d/1topaEo86sHDVPVXeLwkX7t3MOVscreNM8osUcyy8a1U/gviz/tq?tqx=out:json&sheet=ClusterData";
 
     async function loadData() {
       const response = await fetch(sheetUrl);
@@ -45,60 +52,4 @@
       const clusterSet = new Set();
       const allRows = [];
 
-      json.table.rows.forEach(row => {
-        const cluster = row.c[0]?.v ? row.c[0].v.trim().toUpperCase() : "";
-        const school = row.c[1]?.v || "";
-        const task = row.c[2]?.v || "";
-        const due = row.c[3]?.v || "";
-        const status = row.c[4]?.v || "";
-
-        if (!cluster) return;
-
-        const tr = document.createElement("tr");
-        const statusClass = status.toLowerCase() === "pending" ? "pending" : "completed";
-        tr.innerHTML = `
-          <td>${cluster}</td>
-          <td>${school}</td>
-          <td>${task}</td>
-          <td>${due}</td>
-          <td class="${statusClass}">${status}</td>
-        `;
-        allRows.push(tr);
-        clusterSet.add(cluster);
-      });
-
-      // Dropdown auto-populate
-      const clusterFilter = document.getElementById("clusterFilter");
-      Array.from(clusterSet).sort().forEach(c => {
-        if (c) {
-          const opt = document.createElement("option");
-          opt.value = c;
-          opt.textContent = c;
-          clusterFilter.appendChild(opt);
-        }
-      });
-
-      // Table initially empty
-      document.querySelector("#taskTable tbody").innerHTML = "";
-      window.allRows = allRows;
-    }
-
-    function filterCluster() {
-      const filter = document.getElementById("clusterFilter").value;
-      const tbody = document.querySelector("#taskTable tbody");
-      tbody.innerHTML = "";
-
-      if (!filter) return; // blank → no rows
-
-      window.allRows.forEach(row => {
-        const cluster = row.cells[0].textContent.trim().toUpperCase();
-        if (cluster === filter) {
-          tbody.appendChild(row.cloneNode(true));
-        }
-      });
-    }
-
-    loadData();
-  </script>
-</body>
-</html>
+      json
