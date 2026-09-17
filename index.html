@@ -10,7 +10,6 @@
     th { background-color: #f2f2f2; }
     .pending { color: red; font-weight: bold; }
     .completed { color: green; font-weight: bold; }
-    button { margin-top: 15px; padding: 8px 12px; }
   </style>
 </head>
 <body>
@@ -20,8 +19,6 @@
   <select id="clusterFilter" onchange="filterCluster()">
     <option value="">-- પસંદ કરો --</option>
   </select>
-
-  <button onclick="exportPDF()">Export PDF</button>
 
   <table id="taskTable">
     <thead>
@@ -36,62 +33,54 @@
     <tbody></tbody>
   </table>
 
-  <!-- jsPDF + autoTable libraries -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-
   <script>
-    // ✅ Publish થયેલી JSON link મૂકો (tab name સાચું હોવું જોઈએ)
-    const sheetUrl = "https://docs.google.com/spreadsheets/d/1topaEo86sHDVPVXeLwkX7t3MOVscreNM8osUcyy8a1U/gviz/tq?tqx=out:json&sheet=ClusterData";
+    // ✅ અહીં publish થયેલી JSON link મૂકો
+    const sheetUrl = "https://docs.google.com/spreadsheets/d/1topaEo86sHDVPVXeLwkX7t3MOVscreNM8osUcyy8a1U/gviz/tq?tqx=out:json&sheet=Sheet1";
 
     async function loadData() {
-      try {
-        const response = await fetch(sheetUrl);
-        const text = await response.text();
-        const json = JSON.parse(text.substr(47).slice(0, -2));
+      const response = await fetch(sheetUrl);
+      const text = await response.text();
+      const json = JSON.parse(text.substr(47).slice(0, -2));
 
-        const clusterSet = new Set();
-        const allRows = [];
+      const clusterSet = new Set();
+      const allRows = [];
 
-        json.table.rows.forEach(row => {
-          const cluster = row.c[0]?.v ? row.c[0].v.trim().toUpperCase() : "";
-          const school = row.c[1]?.v || "";
-          const task = row.c[2]?.v || "";
-          const due = row.c[3]?.v || "";
-          const status = row.c[4]?.v || "";
+      json.table.rows.forEach(row => {
+        const cluster = row.c[0]?.v ? row.c[0].v.trim().toUpperCase() : "";
+        const school = row.c[1]?.v || "";
+        const task = row.c[2]?.v || "";
+        const due = row.c[3]?.v || "";
+        const status = row.c[4]?.v || "";
 
-          if (!cluster) return;
+        if (!cluster) return;
 
-          const tr = document.createElement("tr");
-          const statusClass = status.toLowerCase() === "pending" ? "pending" : "completed";
-          tr.innerHTML = `
-            <td>${cluster}</td>
-            <td>${school}</td>
-            <td>${task}</td>
-            <td>${due}</td>
-            <td class="${statusClass}">${status}</td>
-          `;
-          allRows.push(tr);
-          clusterSet.add(cluster);
-        });
+        const tr = document.createElement("tr");
+        const statusClass = status.toLowerCase() === "pending" ? "pending" : "completed";
+        tr.innerHTML = `
+          <td>${cluster}</td>
+          <td>${school}</td>
+          <td>${task}</td>
+          <td>${due}</td>
+          <td class="${statusClass}">${status}</td>
+        `;
+        allRows.push(tr);
+        clusterSet.add(cluster);
+      });
 
-        // ✅ Dropdown populate
-        const clusterFilter = document.getElementById("clusterFilter");
-        clusterFilter.innerHTML = '<option value="">-- પસંદ કરો --</option>';
-        Array.from(clusterSet).sort().forEach(c => {
-          if (c) {
-            const opt = document.createElement("option");
-            opt.value = c;
-            opt.textContent = c;
-            clusterFilter.appendChild(opt);
-          }
-        });
+      // Dropdown auto-populate
+      const clusterFilter = document.getElementById("clusterFilter");
+      Array.from(clusterSet).sort().forEach(c => {
+        if (c) {
+          const opt = document.createElement("option");
+          opt.value = c;
+          opt.textContent = c;
+          clusterFilter.appendChild(opt);
+        }
+      });
 
-        document.querySelector("#taskTable tbody").innerHTML = "";
-        window.allRows = allRows;
-      } catch (err) {
-        console.error("Error loading data:", err);
-      }
+      // Table initially empty
+      document.querySelector("#taskTable tbody").innerHTML = "";
+      window.allRows = allRows;
     }
 
     function filterCluster() {
@@ -99,7 +88,7 @@
       const tbody = document.querySelector("#taskTable tbody");
       tbody.innerHTML = "";
 
-      if (!filter) return;
+      if (!filter) return; // blank → no rows
 
       window.allRows.forEach(row => {
         const cluster = row.cells[0].textContent.trim().toUpperCase();
@@ -109,22 +98,7 @@
       });
     }
 
-    function exportPDF() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-
-      doc.text("Cluster School Tasks", 14, 16);
-      doc.autoTable({
-        html: '#taskTable',
-        startY: 25
-      });
-
-      doc.save("Cluster_Tasks.pdf");
-    }
-
-    // ✅ First load + Auto refresh
     loadData();
-    setInterval(loadData, 60000);
   </script>
 </body>
 </html>
