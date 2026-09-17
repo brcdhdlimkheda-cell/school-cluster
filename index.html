@@ -45,7 +45,7 @@
   <script>
     const { jsPDF } = window.jspdf;
 
-    // ✅ Base64 Gujarati font data (shortened demo, replace with full string)
+    // ✅ Gujarati font Base64 data (short demo string, replace with full Base64 from .ttf)
     const gujaratiFontData = "AAEAAAALAIAAAwAwT1MvMg8S..."; // અહીં full Base64 string મૂકો
 
     // ✅ Register Gujarati font
@@ -128,16 +128,4 @@
         return;
       }
 
-      doc.autoTable({
-        head: [['Cluster', 'School', 'Task Description', 'Due Date', 'Status']],
-        body: rows,
-        startY: 25
-      });
-
-      doc.save("Filtered_Cluster_Tasks.pdf");
-    }
-
-    loadData();
-  </script>
-</body>
-</html>
+      doc
