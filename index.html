@@ -2,7 +2,7 @@
 <html lang="gu">
 <head>
   <meta charset="UTF-8">
- <title>Cluster School Tasks</title>
+  <title>Cluster School Tasks</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
     table { border-collapse: collapse; width: 100%; margin-top: 20px; }
@@ -14,7 +14,7 @@
   </style>
 </head>
 <body>
-  <h2>ક્લસ્ટર કો-ઓ ની દૈનિક કામગીરી</h2>
+  <h2>ક્લસ્ટર મુજબ શાળાની બાકી કામગીરી</h2>
 
   <label for="clusterFilter">Cluster પસંદ કરો:</label>
   <select id="clusterFilter" onchange="filterCluster()">
@@ -45,47 +45,51 @@
     const sheetUrl = "https://docs.google.com/spreadsheets/d/1topaEo86sHDVPVXeLwkX7t3MOVscreNM8osUcyy8a1U/gviz/tq?tqx=out:json&sheet=Sheet1";
 
     async function loadData() {
-      const response = await fetch(sheetUrl);
-      const text = await response.text();
-      const json = JSON.parse(text.substr(47).slice(0, -2));
+      try {
+        const response = await fetch(sheetUrl);
+        const text = await response.text();
+        const json = JSON.parse(text.substr(47).slice(0, -2));
 
-      const clusterSet = new Set();
-      const allRows = [];
+        const clusterSet = new Set();
+        const allRows = [];
 
-      json.table.rows.forEach(row => {
-        const cluster = row.c[0]?.v ? row.c[0].v.trim().toUpperCase() : "";
-        const school = row.c[1]?.v || "";
-        const task = row.c[2]?.v || "";
-        const due = row.c[3]?.v || "";
-        const status = row.c[4]?.v || "";
+        json.table.rows.forEach(row => {
+          const cluster = row.c[0]?.v ? row.c[0].v.trim().toUpperCase() : "";
+          const school = row.c[1]?.v || "";
+          const task = row.c[2]?.v || "";
+          const due = row.c[3]?.v || "";
+          const status = row.c[4]?.v || "";
 
-        if (!cluster) return;
+          if (!cluster) return;
 
-        const tr = document.createElement("tr");
-        const statusClass = status.toLowerCase() === "pending" ? "pending" : "completed";
-        tr.innerHTML = `
-          <td>${cluster}</td>
-          <td>${school}</td>
-          <td>${task}</td>
-          <td>${due}</td>
-          <td class="${statusClass}">${status}</td>
-        `;
-        allRows.push(tr);
-        clusterSet.add(cluster);
-      });
+          const tr = document.createElement("tr");
+          const statusClass = status.toLowerCase() === "pending" ? "pending" : "completed";
+          tr.innerHTML = `
+            <td>${cluster}</td>
+            <td>${school}</td>
+            <td>${task}</td>
+            <td>${due}</td>
+            <td class="${statusClass}">${status}</td>
+          `;
+          allRows.push(tr);
+          clusterSet.add(cluster);
+        });
 
-      const clusterFilter = document.getElementById("clusterFilter");
-      Array.from(clusterSet).sort().forEach(c => {
-        if (c) {
-          const opt = document.createElement("option");
-          opt.value = c;
-          opt.textContent = c;
-          clusterFilter.appendChild(opt);
-        }
-      });
+        const clusterFilter = document.getElementById("clusterFilter");
+        Array.from(clusterSet).sort().forEach(c => {
+          if (c) {
+            const opt = document.createElement("option");
+            opt.value = c;
+            opt.textContent = c;
+            clusterFilter.appendChild(opt);
+          }
+        });
 
-      document.querySelector("#taskTable tbody").innerHTML = "";
-      window.allRows = allRows;
+        document.querySelector("#taskTable tbody").innerHTML = "";
+        window.allRows = allRows;
+      } catch (err) {
+        console.error("Error loading data:", err);
+      }
     }
 
     function filterCluster() {
