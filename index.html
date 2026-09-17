@@ -42,7 +42,7 @@
 
   <script>
     // ✅ Publish થયેલી JSON link મૂકો (tab name સાચું હોવું જોઈએ)
-    const sheetUrl = "https://docs.google.com/spreadsheets/d/1topaEo86sHDVPVXeLwkX7t3MOVscreNM8osUcyy8a1U/gviz/tq?tqx=out:json&sheet=Sheet1";
+    const sheetUrl = "https://docs.google.com/spreadsheets/d/1topaEo86sHDVPVXeLwkX7t3MOVscreNM8osUcyy8a1U/gviz/tq?tqx=out:json&sheet=ClusterData";
 
     async function loadData() {
       try {
@@ -113,7 +113,6 @@
 
       doc.text("Cluster School Tasks", 14, 16);
 
-      // ✅ Export only filtered rows
       const rows = Array.from(document.querySelectorAll("#taskTable tbody tr")).map(tr =>
         Array.from(tr.cells).map(td => td.textContent)
       );
