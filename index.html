@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Gujarati PDF Export with Google Sheet Dropdown</title>
+  <title>Cluster Data Viewer</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
@@ -11,7 +11,20 @@
     <option value="">-- ક્લસ્ટર પસંદ કરો --</option>
   </select>
 
-  <br><br>
+  <h3>Details:</h3>
+  <table border="1" id="details">
+    <thead>
+      <tr>
+        <th>School</th>
+        <th>Task Description-1</th>
+        <th>Pen No.</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <br>
   <button id="download">Download Gujarati PDF</button>
 
   <script>
@@ -23,44 +36,63 @@
     jsPDF.API.addFileToVFS("Shruti.ttf", gujaratiFontData);
     jsPDF.API.addFont("Shruti.ttf", "Shruti", "normal");
 
-    // Your published CSV link
     const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSh45K32G2Zt8LCBcIBgxx64qZtNtCrwKltz80WDg9LFddf4VK4xTDMFf63VIqnkwy1UKlhy0HbJryY/pub?output=csv";
 
-    // Populate dropdown from CSV (skip header row)
+    let allData = [];
+
+    // Load CSV
     fetch(sheetUrl)
       .then(res => res.text())
       .then(text => {
-        const rows = text.split("\n");
-        const select = document.getElementById("cluster");
+        const rows = text.split("\n").map(r => r.split(","));
+        allData = rows.slice(1); // skip header
 
-        rows.slice(1).forEach(row => {
-          const value = row.trim();
-          if (value) {
+        // Populate Cluster dropdown
+        const clusters = [...new Set(allData.map(r => r[0].trim()))];
+        const select = document.getElementById("cluster");
+        clusters.forEach(c => {
+          if (c) {
             const opt = document.createElement("option");
-            opt.value = value;
-            opt.textContent = value;
+            opt.value = c;
+            opt.textContent = c;
             select.appendChild(opt);
           }
         });
-      })
-      .catch(err => console.error("CSV fetch error:", err));
+      });
 
-    // Generate PDF
+    // On cluster change → show details
+    document.getElementById("cluster").addEventListener("change", e => {
+      const cluster = e.target.value;
+      const tbody = document.querySelector("#details tbody");
+      tbody.innerHTML = "";
+
+      allData.filter(r => r[0].trim() === cluster).forEach(r => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td>`;
+        tbody.appendChild(tr);
+      });
+    });
+
+    // PDF export
     document.getElementById("download").addEventListener("click", () => {
-      const clusterValue = document.getElementById("cluster").value;
+      const cluster = document.getElementById("cluster").value;
       const doc = new jsPDF();
       doc.setFont("Shruti");
-      doc.setFontSize(16);
+      doc.setFontSize(14);
 
-      if (clusterValue) {
-        doc.text("પસંદ કરેલ ક્લસ્ટર: " + clusterValue, 20, 30);
+      if (cluster) {
+        doc.text("પસંદ કરેલ ક્લસ્ટર: " + cluster, 20, 20);
+
+        let y = 40;
+        allData.filter(r => r[0].trim() === cluster).forEach(r => {
+          doc.text(`School: ${r[1]} | Task: ${r[2]} | Pen No: ${r[3]} | Status: ${r[4]}`, 20, y);
+          y += 10;
+        });
       } else {
-        doc.text("કોઈ ક્લસ્ટર પસંદ કરેલ નથી.", 20, 30);
+        doc.text("કોઈ ક્લસ્ટર પસંદ કરેલ નથી.", 20, 20);
       }
 
-      doc.text("ગુજરાતી લખાણ symbols નહીં, સાચા અક્ષરોમાં દેખાશે!", 20, 50);
-
-      doc.save("cluster-demo.pdf");
+      doc.save("cluster-data.pdf");
     });
   </script>
 </body>
