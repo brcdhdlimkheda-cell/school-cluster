@@ -47,7 +47,7 @@
         const rows = text.split("\n").map(r => r.split(","));
         allData = rows.slice(1); // skip header
 
-        // Populate Cluster dropdown
+        // Populate Cluster dropdown (unique values)
         const clusters = [...new Set(allData.map(r => r[0].trim()))];
         const select = document.getElementById("cluster");
         clusters.forEach(c => {
@@ -68,7 +68,12 @@
 
       allData.filter(r => r[0].trim() === cluster).forEach(r => {
         const tr = document.createElement("tr");
-        tr.innerHTML = `<td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td>`;
+        tr.innerHTML = `
+          <td>${r[1]}</td>
+          <td>${r[2]}</td>
+          <td>${r[3]}</td>
+          <td>${r[4]}</td>
+        `;
         tbody.appendChild(tr);
       });
     });
