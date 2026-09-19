@@ -24,20 +24,21 @@
     jsPDF.API.addFileToVFS("Shruti.ttf", gujaratiFontData);
     jsPDF.API.addFont("Shruti.ttf", "Shruti", "normal");
 
-    // Google Sheet CSV link (your published link)
+    // Google Sheet CSV link (published link)
     const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSh45K32G2Zt8LCBcIBgxx64qZtNtCrwKltz80WDg9LFddf4VK4xTDMFf63VIqnkwy1UKlhy0HbJryY/pub?output=csv";
 
-    // Populate dropdown from CSV
+    // Populate dropdown from CSV (skip header row)
     fetch(sheetUrl)
       .then(res => res.text())
       .then(text => {
         const rows = text.split("\n");
         const select = document.getElementById("cluster");
-        rows.forEach(row => {
-          if (row.trim()) {
+        rows.slice(1).forEach(row => {
+          const value = row.trim();
+          if (value) {
             const opt = document.createElement("option");
-            opt.value = row.trim();
-            opt.textContent = row.trim();
+            opt.value = value;
+            opt.textContent = value;
             select.appendChild(opt);
           }
         });
