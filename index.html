@@ -1,86 +1,114 @@
-<h2 id="clusterTitle">Select Cluster:
-  <select id="cluster">
-    <option value="">-- Select Cluster --</option>
-  </select>
-</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cluster Data Viewer</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+</head>
+<body>
+  <h2 id="clusterTitle">
+    Select Cluster:
+    <select id="cluster">
+      <option value="">-- Select Cluster --</option>
+    </select>
+  </h2>
 
-<h3>Details:</h3>
-<table border="1" id="details">
-  <thead>
-    <tr>
-      <th>School</th>
-      <th>Task Description-1</th>
-      <th>Pen No.</th>
-      <th>Status</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
-</table>
+  <h3>Details:</h3>
+  <table border="1" id="details">
+    <thead>
+      <tr>
+        <th>School</th>
+        <th>Task Description-1</th>
+        <th>Pen No.</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
-<script>
-  const { jsPDF } = window.jspdf;
-  const sheetUrl = "YOUR_CSV_LINK"; // replace with your CSV link
-  let allData = [];
+  <script>
+    const { jsPDF } = window.jspdf;
+    const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSh45K32G2Zt8LCBcIBgxx64qZtNtCrwKltz80WDg9LFddf4VK4xTDMFf63VIqnkwy1UKlhy0HbJryY/pub?output=csv";
 
-  fetch(sheetUrl)
-    .then(res => res.text())
-    .then(text => {
-      const parsed = Papa.parse(text, { header: true });
-      allData = parsed.data;
+    let allData = [];
 
-      const clusters = [...new Set(allData.map(r => (r["Cluster"] || "").trim()).filter(Boolean))];
-      const select = document.getElementById("cluster");
-      clusters.forEach(c => {
-        const opt = document.createElement("option");
-        opt.value = c;
-        opt.textContent = c;
-        select.appendChild(opt);
-      });
-    });
+    // Load CSV
+    fetch(sheetUrl)
+      .then(res => res.text())
+      .then(text => {
+        const parsed = Papa.parse(text, { header: true });
+        allData = parsed.data;
 
-  document.getElementById("cluster").addEventListener("change", e => {
-    const cluster = e.target.value;
-    const tbody = document.querySelector("#details tbody");
-    tbody.innerHTML = "";
-
-    // Remove old button if exists
-    const oldBtn = document.getElementById("download");
-    if (oldBtn) oldBtn.remove();
-
-    if (cluster) {
-      // Show cluster name + button
-      const title = document.getElementById("clusterTitle");
-      const btn = document.createElement("button");
-      btn.id = "download";
-      btn.textContent = "Download PDF";
-      title.appendChild(btn);
-
-      // Fill table
-      allData.filter(r => (r["Cluster"] || "").trim() === cluster).forEach(r => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${r["School"] || ""}</td>
-          <td>${r["Task Description-1"] || ""}</td>
-          <td>${r["Pen No."] || ""}</td>
-          <td>${r["Status"] || ""}</td>
-        `;
-        tbody.appendChild(tr);
+        // Populate Cluster dropdown
+        const clusters = [...new Set(allData.map(r => (r["Cluster"] || "").trim()).filter(Boolean))];
+        const select = document.getElementById("cluster");
+        clusters.forEach(c => {
+          const opt = document.createElement("option");
+          opt.value = c;
+          opt.textContent = c;
+          select.appendChild(opt);
+        });
       });
 
-      // Button action
-      btn.addEventListener("click", () => {
-        const doc = new jsPDF();
-        doc.setFontSize(12);
-        doc.text("Selected Cluster: " + cluster, 20, 20);
+    // On cluster change → show details + button
+    document.getElementById("cluster").addEventListener("change", e => {
+      const cluster = e.target.value;
+      const tbody = document.querySelector("#details tbody");
+      tbody.innerHTML = "";
 
-        let y = 40;
+      // Remove old button if exists
+      const oldBtn = document.getElementById("download");
+      if (oldBtn) oldBtn.remove();
+
+      if (cluster) {
+        // Show cluster name + button
+        const title = document.getElementById("clusterTitle");
+        const btn = document.createElement("button");
+        btn.id = "download";
+        btn.textContent = "Download PDF";
+        title.appendChild(btn);
+
+        // Fill table
         allData.filter(r => (r["Cluster"] || "").trim() === cluster).forEach(r => {
-          doc.text(`School: ${r["School"]} | Task: ${r["Task Description-1"]} | Pen No: ${r["Pen No."]} | Status: ${r["Status"]}`, 20, y);
-          y += 10;
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${r["School"] || ""}</td>
+            <td>${r["Task Description-1"] || ""}</td>
+            <td>${r["Pen No."] || ""}</td>
+            <td>${r["Status"] || ""}</td>
+          `;
+          tbody.appendChild(tr);
         });
 
-        doc.save(cluster + "-data.pdf");
-      });
-    }
-  });
-</script>
+        // Button action → PDF export
+        btn.addEventListener("click", () => {
+          const doc = new jsPDF({
+            orientation: "portrait",
+            unit: "mm",
+            format: "a4"
+          });
+
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(12);
+
+          doc.text("Selected Cluster: " + cluster, 20, 20);
+
+          let y = 40;
+          allData.filter(r => (r["Cluster"] || "").trim() === cluster).forEach(r => {
+            doc.text(
+              `School: ${r["School"]} | Task: ${r["Task Description-1"]} | Pen No: ${r["Pen No."]} | Status: ${r["Status"]}`,
+              20,
+              y,
+              { maxWidth: 170 }
+            );
+            y += 10;
+          });
+
+          doc.save(cluster + "-data.pdf");
+        });
+      }
+    });
+  </script>
+</body>
+</html>
