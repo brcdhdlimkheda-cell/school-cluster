@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Cluster Dropdown Test</title>
+  <title>Cluster Data Viewer</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
 <body>
@@ -38,8 +38,8 @@
         // Debug: print actual header keys
         console.log("Headers:", Object.keys(allData[0]));
 
-        // Populate Cluster dropdown
-        const clusters = [...new Set(allData.map(r => (r.Cluster || r["Cluster "] || "").trim()).filter(Boolean))];
+        // Populate Cluster dropdown (unique values)
+        const clusters = [...new Set(allData.map(r => (r.Cluster || "").trim()).filter(Boolean))];
         const select = document.getElementById("cluster");
         clusters.forEach(c => {
           const opt = document.createElement("option");
@@ -55,7 +55,7 @@
       const tbody = document.querySelector("#details tbody");
       tbody.innerHTML = "";
 
-      allData.filter(r => (r.Cluster || r["Cluster "] || "").trim() === cluster).forEach(r => {
+      allData.filter(r => (r.Cluster || "").trim() === cluster).forEach(r => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${r.School || ""}</td>
