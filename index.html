@@ -2,16 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Gujarati PDF Export with Cluster Dropdown</title>
+  <title>Gujarati PDF Export with Google Sheet Dropdown</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
   <h2>Cluster પસંદ કરો:</h2>
   <select id="cluster">
     <option value="">-- ક્લસ્ટર પસંદ કરો --</option>
-    <option value="A">ક્લસ્ટર A</option>
-    <option value="B">ક્લસ્ટર B</option>
-    <option value="C">ક્લસ્ટર C</option>
   </select>
 
   <br><br>
@@ -26,6 +23,24 @@
     // Register font with jsPDF
     jsPDF.API.addFileToVFS("Shruti.ttf", gujaratiFontData);
     jsPDF.API.addFont("Shruti.ttf", "Shruti", "normal");
+
+    // Fetch cluster list from Google Apps Script WebApp
+    // Replace with your deployed WebApp URL
+    const sheetUrl = "YOUR_GOOGLE_APPS_SCRIPT_WEBAPP_URL";
+
+    fetch(sheetUrl)
+      .then(res => res.json())
+      .then(data => {
+        const select = document.getElementById("cluster");
+        data.forEach(row => {
+          if (row[0]) {
+            const opt = document.createElement("option");
+            opt.value = row[0];
+            opt.textContent = row[0];
+            select.appendChild(opt);
+          }
+        });
+      });
 
     document.getElementById("download").addEventListener("click", () => {
       const clusterValue = document.getElementById("cluster").value;
