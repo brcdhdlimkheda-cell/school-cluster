@@ -44,7 +44,8 @@
     fetch(sheetUrl)
       .then(res => res.text())
       .then(text => {
-        const rows = text.split("\n").map(r => r.split(","));
+        // Split rows safely
+        const rows = text.trim().split(/\r?\n/).map(r => r.split(","));
         allData = rows.slice(1); // skip header
 
         // Populate Cluster dropdown (unique values)
@@ -58,7 +59,8 @@
             select.appendChild(opt);
           }
         });
-      });
+      })
+      .catch(err => console.error("CSV fetch error:", err));
 
     // On cluster change → show details
     document.getElementById("cluster").addEventListener("change", e => {
