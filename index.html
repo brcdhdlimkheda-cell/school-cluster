@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Cluster Data Viewer</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
 <body>
   <h2>Cluster પસંદ કરો:</h2>
@@ -40,27 +41,23 @@
 
     let allData = [];
 
-    // Load CSV
+    // Load CSV with PapaParse
     fetch(sheetUrl)
       .then(res => res.text())
       .then(text => {
-        // Split rows safely
-        const rows = text.trim().split(/\r?\n/).map(r => r.split(","));
-        allData = rows.slice(1); // skip header
+        const parsed = Papa.parse(text, { header: true });
+        allData = parsed.data;
 
         // Populate Cluster dropdown (unique values)
-        const clusters = [...new Set(allData.map(r => r[0].trim()))];
+        const clusters = [...new Set(allData.map(r => r.Cluster).filter(Boolean))];
         const select = document.getElementById("cluster");
         clusters.forEach(c => {
-          if (c) {
-            const opt = document.createElement("option");
-            opt.value = c;
-            opt.textContent = c;
-            select.appendChild(opt);
-          }
+          const opt = document.createElement("option");
+          opt.value = c;
+          opt.textContent = c;
+          select.appendChild(opt);
         });
-      })
-      .catch(err => console.error("CSV fetch error:", err));
+      });
 
     // On cluster change → show details
     document.getElementById("cluster").addEventListener("change", e => {
@@ -68,13 +65,13 @@
       const tbody = document.querySelector("#details tbody");
       tbody.innerHTML = "";
 
-      allData.filter(r => r[0].trim() === cluster).forEach(r => {
+      allData.filter(r => r.Cluster === cluster).forEach(r => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td>${r[1]}</td>
-          <td>${r[2]}</td>
-          <td>${r[3]}</td>
-          <td>${r[4]}</td>
+          <td>${r.School || ""}</td>
+          <td>${r["Task Description-1"] || ""}</td>
+          <td>${r["Pen No."] || ""}</td>
+          <td>${r.Status || ""}</td>
         `;
         tbody.appendChild(tr);
       });
@@ -91,8 +88,8 @@
         doc.text("પસંદ કરેલ ક્લસ્ટર: " + cluster, 20, 20);
 
         let y = 40;
-        allData.filter(r => r[0].trim() === cluster).forEach(r => {
-          doc.text(`School: ${r[1]} | Task: ${r[2]} | Pen No: ${r[3]} | Status: ${r[4]}`, 20, y);
+        allData.filter(r => r.Cluster === cluster).forEach(r => {
+          doc.text(`School: ${r.School} | Task: ${r["Task Description-1"]} | Pen No: ${r["Pen No."]} | Status: ${r.Status}`, 20, y);
           y += 10;
         });
       } else {
