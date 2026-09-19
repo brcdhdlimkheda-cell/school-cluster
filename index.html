@@ -7,9 +7,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
 <body>
-  <h2>Cluster પસંદ કરો:</h2>
+  <h2>Select Cluster:</h2>
   <select id="cluster">
-    <option value="">-- ક્લસ્ટર પસંદ કરો --</option>
+    <option value="">-- Select Cluster --</option>
   </select>
 
   <h3>Details:</h3>
@@ -26,15 +26,12 @@
   </table>
 
   <br>
-  <button id="download">Download Gujarati PDF</button>
+  <button id="download">Download PDF</button>
 
   <script>
     const { jsPDF } = window.jspdf;
 
-    // Gujarati font Base64 string (Shruti.ttf)
-    const gujaratiFontData = `AAEAAA...LONG_BASE64_STRING...==`;
-
-    const sheetUrl = "YOUR_PUBLISHED_CSV_LINK";
+    const sheetUrl = "YOUR_PUBLISHED_CSV_LINK"; // replace with your Google Sheet CSV link
 
     let allData = [];
 
@@ -45,11 +42,10 @@
         const parsed = Papa.parse(text, { header: true });
         allData = parsed.data;
 
-        // Debug: print actual header keys
-        console.log("Headers:", Object.keys(allData[0]));
+        console.log("Headers:", Object.keys(allData[0])); // debug
 
-        // Populate Cluster dropdown (unique values)
-        const clusters = [...new Set(allData.map(r => (r.Cluster || r["Cluster "] || r.cluster || "").trim()).filter(Boolean))];
+        // Populate Cluster dropdown
+        const clusters = [...new Set(allData.map(r => (r.Cluster || "").trim()).filter(Boolean))];
         const select = document.getElementById("cluster");
         clusters.forEach(c => {
           const opt = document.createElement("option");
@@ -65,7 +61,7 @@
       const tbody = document.querySelector("#details tbody");
       tbody.innerHTML = "";
 
-      allData.filter(r => (r.Cluster || r["Cluster "] || r.cluster || "").trim() === cluster).forEach(r => {
+      allData.filter(r => (r.Cluster || "").trim() === cluster).forEach(r => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${r.School || ""}</td>
@@ -81,23 +77,18 @@
     document.getElementById("download").addEventListener("click", () => {
       const cluster = document.getElementById("cluster").value;
       const doc = new jsPDF();
-
-      // Correct jsPDF v2.5+ font embed syntax
-      doc.addFileToVFS("Shruti.ttf", gujaratiFontData);
-      doc.addFont("Shruti.ttf", "Shruti", "normal");
-      doc.setFont("Shruti");
-      doc.setFontSize(14);
+      doc.setFontSize(12);
 
       if (cluster) {
-        doc.text("પસંદ કરેલ ક્લસ્ટર: " + cluster, 20, 20);
+        doc.text("Selected Cluster: " + cluster, 20, 20);
 
         let y = 40;
-        allData.filter(r => (r.Cluster || r["Cluster "] || r.cluster || "").trim() === cluster).forEach(r => {
+        allData.filter(r => (r.Cluster || "").trim() === cluster).forEach(r => {
           doc.text(`School: ${r.School} | Task: ${r["Task Description-1"]} | Pen No: ${r["Pen No."]} | Status: ${r.Status}`, 20, y);
           y += 10;
         });
       } else {
-        doc.text("કોઈ ક્લસ્ટર પસંદ કરેલ નથી.", 20, 20);
+        doc.text("No cluster selected.", 20, 20);
       }
 
       doc.save("cluster-data.pdf");
