@@ -2,10 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Gujarati PDF Export</title>
+  <title>Gujarati PDF Export with Cluster Dropdown</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
+  <h2>Cluster પસંદ કરો:</h2>
+  <select id="cluster">
+    <option value="">-- Select Cluster --</option>
+    <option value="A">Cluster A</option>
+    <option value="B">Cluster B</option>
+    <option value="C">Cluster C</option>
+  </select>
+
+  <br><br>
   <button id="download">Download Gujarati PDF</button>
 
   <script>
@@ -19,14 +28,20 @@
     jsPDF.API.addFont("Shruti.ttf", "Shruti", "normal");
 
     document.getElementById("download").addEventListener("click", () => {
+      const clusterValue = document.getElementById("cluster").value;
       const doc = new jsPDF();
       doc.setFont("Shruti");
       doc.setFontSize(16);
 
-      // Gujarati text example
-      doc.text("ગુજરાતી લખાણ હવે symbols નહીં, સાચા અક્ષરોમાં દેખાશે!", 20, 30);
+      if (clusterValue) {
+        doc.text("પસંદ કરેલ Cluster: " + clusterValue, 20, 30);
+      } else {
+        doc.text("કોઈ Cluster પસંદ કરેલ નથી.", 20, 30);
+      }
 
-      doc.save("gujarati-demo.pdf");
+      doc.text("ગુજરાતી લખાણ symbols નહીં, સાચા અક્ષરોમાં દેખાશે!", 20, 50);
+
+      doc.save("cluster-demo.pdf");
     });
   </script>
 </body>
