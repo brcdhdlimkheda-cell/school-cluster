@@ -30,23 +30,19 @@
 
   <script>
     const { jsPDF } = window.jspdf;
-
-    // Replace with your published Google Sheet CSV link
-    const sheetUrl = "YOUR_PUBLISHED_CSV_LINK";
-
+    const sheetUrl = "YOUR_PUBLISHED_CSV_LINK"; // replace with your Google Sheet CSV link
     let allData = [];
 
-    // Load CSV with PapaParse
     fetch(sheetUrl)
       .then(res => res.text())
       .then(text => {
         const parsed = Papa.parse(text, { header: true });
         allData = parsed.data;
 
-        console.log("Headers:", Object.keys(allData[0])); // debug
+        console.log("Headers:", Object.keys(allData[0])); // check actual keys
 
-        // Populate Cluster dropdown
-        const clusters = [...new Set(allData.map(r => (r.Cluster || "").trim()).filter(Boolean))];
+        // Use exact header name seen in console
+        const clusters = [...new Set(allData.map(r => (r["Cluster"] || "").trim()).filter(Boolean))];
         const select = document.getElementById("cluster");
         clusters.forEach(c => {
           const opt = document.createElement("option");
@@ -56,25 +52,23 @@
         });
       });
 
-    // On cluster change → show details
     document.getElementById("cluster").addEventListener("change", e => {
       const cluster = e.target.value;
       const tbody = document.querySelector("#details tbody");
       tbody.innerHTML = "";
 
-      allData.filter(r => (r.Cluster || "").trim() === cluster).forEach(r => {
+      allData.filter(r => (r["Cluster"] || "").trim() === cluster).forEach(r => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td>${r.School || ""}</td>
+          <td>${r["School"] || ""}</td>
           <td>${r["Task Description-1"] || ""}</td>
           <td>${r["Pen No."] || ""}</td>
-          <td>${r.Status || ""}</td>
+          <td>${r["Status"] || ""}</td>
         `;
         tbody.appendChild(tr);
       });
     });
 
-    // PDF export
     document.getElementById("download").addEventListener("click", () => {
       const cluster = document.getElementById("cluster").value;
       const doc = new jsPDF();
@@ -82,10 +76,9 @@
 
       if (cluster) {
         doc.text("Selected Cluster: " + cluster, 20, 20);
-
         let y = 40;
-        allData.filter(r => (r.Cluster || "").trim() === cluster).forEach(r => {
-          doc.text(`School: ${r.School} | Task: ${r["Task Description-1"]} | Pen No: ${r["Pen No."]} | Status: ${r.Status}`, 20, y);
+        allData.filter(r => (r["Cluster"] || "").trim() === cluster).forEach(r => {
+          doc.text(`School: ${r["School"]} | Task: ${r["Task Description-1"]} | Pen No: ${r["Pen No."]} | Status: ${r["Status"]}`, 20, y);
           y += 10;
         });
       } else {
