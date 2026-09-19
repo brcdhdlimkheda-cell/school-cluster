@@ -7,10 +7,13 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
 <body>
-  <h2>Select Cluster:</h2>
-  <select id="cluster">
-    <option value="">-- Select Cluster --</option>
-  </select>
+  <h2>
+    Select Cluster:
+    <select id="cluster">
+      <option value="">-- Select Cluster --</option>
+    </select>
+    <button id="download">Download PDF</button>
+  </h2>
 
   <h3>Details:</h3>
   <table border="1" id="details">
@@ -25,15 +28,13 @@
     <tbody></tbody>
   </table>
 
-  <br>
-  <button id="download">Download PDF</button>
-
   <script>
     const { jsPDF } = window.jspdf;
     const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSh45K32G2Zt8LCBcIBgxx64qZtNtCrwKltz80WDg9LFddf4VK4xTDMFf63VIqnkwy1UKlhy0HbJryY/pub?output=csv";
 
     let allData = [];
 
+    // Load CSV
     fetch(sheetUrl)
       .then(res => res.text())
       .then(text => {
@@ -53,6 +54,7 @@
         });
       });
 
+    // On cluster change → show details
     document.getElementById("cluster").addEventListener("change", e => {
       const cluster = e.target.value;
       const tbody = document.querySelector("#details tbody");
@@ -70,6 +72,7 @@
       });
     });
 
+    // PDF export
     document.getElementById("download").addEventListener("click", () => {
       const cluster = document.getElementById("cluster").value;
       const doc = new jsPDF();
