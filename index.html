@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Cluster Data Viewer</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
 <body>
@@ -24,19 +25,28 @@
     <tbody></tbody>
   </table>
 
+  <br>
+  <button id="download">Download Gujarati PDF</button>
+
   <script>
+    const { jsPDF } = window.jspdf;
+
+    // Gujarati font Base64 string (Shruti.ttf)
+    const gujaratiFontData = `AAEAAA...LONG_BASE64_STRING...==`;
+
+    jsPDF.API.addFileToVFS("Shruti.ttf", gujaratiFontData);
+    jsPDF.API.addFont("Shruti.ttf", "Shruti", "normal");
+
     const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSh45K32G2Zt8LCBcIBgxx64qZtNtCrwKltz80WDg9LFddf4VK4xTDMFf63VIqnkwy1UKlhy0HbJryY/pub?output=csv";
 
     let allData = [];
 
+    // Load CSV with PapaParse
     fetch(sheetUrl)
       .then(res => res.text())
       .then(text => {
         const parsed = Papa.parse(text, { header: true });
         allData = parsed.data;
-
-        // Debug: print actual header keys
-        console.log("Headers:", Object.keys(allData[0]));
 
         // Populate Cluster dropdown (unique values)
         const clusters = [...new Set(allData.map(r => (r.Cluster || "").trim()).filter(Boolean))];
@@ -65,6 +75,28 @@
         `;
         tbody.appendChild(tr);
       });
+    });
+
+    // PDF export
+    document.getElementById("download").addEventListener("click", () => {
+      const cluster = document.getElementById("cluster").value;
+      const doc = new jsPDF();
+      doc.setFont("Shruti");
+      doc.setFontSize(14);
+
+      if (cluster) {
+        doc.text("પસંદ કરેલ ક્લસ્ટર: " + cluster, 20, 20);
+
+        let y = 40;
+        allData.filter(r => (r.Cluster || "").trim() === cluster).forEach(r => {
+          doc.text(`School: ${r.School} | Task: ${r["Task Description-1"]} | Pen No: ${r["Pen No."]} | Status: ${r.Status}`, 20, y);
+          y += 10;
+        });
+      } else {
+        doc.text("કોઈ ક્લસ્ટર પસંદ કરેલ નથી.", 20, 20);
+      }
+
+      doc.save("cluster-data.pdf");
     });
   </script>
 </body>
