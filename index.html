@@ -26,14 +26,13 @@
     // Your published CSV link
     const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSh45K32G2Zt8LCBcIBgxx64qZtNtCrwKltz80WDg9LFddf4VK4xTDMFf63VIqnkwy1UKlhy0HbJryY/pub?output=csv";
 
-    // Populate dropdown from CSV
+    // Populate dropdown from CSV (skip header row)
     fetch(sheetUrl)
       .then(res => res.text())
       .then(text => {
         const rows = text.split("\n");
         const select = document.getElementById("cluster");
 
-        // Skip header row
         rows.slice(1).forEach(row => {
           const value = row.trim();
           if (value) {
