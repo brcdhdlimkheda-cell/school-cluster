@@ -37,11 +37,10 @@
     jsPDF.API.addFileToVFS("Shruti.ttf", gujaratiFontData);
     jsPDF.API.addFont("Shruti.ttf", "Shruti", "normal");
 
-    const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSh45K32G2Zt8LCBcIBgxx64qZtNtCrwKltz80WDg9LFddf4VK4xTDMFf63VIqnkwy1UKlhy0HbJryY/pub?output=csv";
+    const sheetUrl = "YOUR_PUBLISHED_CSV_LINK";
 
     let allData = [];
 
-    // Load CSV with PapaParse
     fetch(sheetUrl)
       .then(res => res.text())
       .then(text => {
@@ -51,8 +50,8 @@
         // Debug: print actual header keys
         console.log("Headers:", Object.keys(allData[0]));
 
-        // Populate Cluster dropdown (unique values)
-        const clusters = [...new Set(allData.map(r => (r.Cluster || "").trim()).filter(Boolean))];
+        // Use exact header name seen in console
+        const clusters = [...new Set(allData.map(r => (r.Cluster || r["Cluster "] || r.cluster || "").trim()).filter(Boolean))];
         const select = document.getElementById("cluster");
         clusters.forEach(c => {
           const opt = document.createElement("option");
@@ -62,13 +61,12 @@
         });
       });
 
-    // On cluster change → show details
     document.getElementById("cluster").addEventListener("change", e => {
       const cluster = e.target.value;
       const tbody = document.querySelector("#details tbody");
       tbody.innerHTML = "";
 
-      allData.filter(r => (r.Cluster || "").trim() === cluster).forEach(r => {
+      allData.filter(r => (r.Cluster || r["Cluster "] || r.cluster || "").trim() === cluster).forEach(r => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${r.School || ""}</td>
@@ -80,7 +78,6 @@
       });
     });
 
-    // PDF export
     document.getElementById("download").addEventListener("click", () => {
       const cluster = document.getElementById("cluster").value;
       const doc = new jsPDF();
@@ -91,7 +88,7 @@
         doc.text("પસંદ કરેલ ક્લસ્ટર: " + cluster, 20, 20);
 
         let y = 40;
-        allData.filter(r => (r.Cluster || "").trim() === cluster).forEach(r => {
+        allData.filter(r => (r.Cluster || r["Cluster "] || r.cluster || "").trim() === cluster).forEach(r => {
           doc.text(`School: ${r.School} | Task: ${r["Task Description-1"]} | Pen No: ${r["Pen No."]} | Status: ${r.Status}`, 20, y);
           y += 10;
         });
