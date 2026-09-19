@@ -4,21 +4,30 @@
   <meta charset="UTF-8">
   <title>Cluster School Tasks</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
+    body { font-family: 'Noto Sans Gujarati', sans-serif; margin: 20px; }
     table { border-collapse: collapse; width: 100%; margin-top: 20px; }
     th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
     th { background-color: #f2f2f2; }
     .pending { color: red; font-weight: bold; }
     .completed { color: green; font-weight: bold; }
+    label { margin-right: 10px; }
+    select { margin-right: 20px; }
     button { margin-top: 15px; padding: 8px 12px; }
   </style>
+  <!-- ✅ Google Gujarati font for browser -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Gujarati&display=swap" rel="stylesheet">
 </head>
 <body>
   <h2>ક્લસ્ટર મુજબ શાળાની બાકી કામગીરી</h2>
 
   <label for="clusterFilter">Cluster પસંદ કરો:</label>
-  <select id="clusterFilter" onchange="filterCluster()">
-    <option value="">-- પસંદ કરો --</option>
+  <select id="clusterFilter" onchange="populateTasks()">
+    <option value="">-- Cluster પસંદ કરો --</option>
+  </select>
+
+  <label for="taskFilter">Task પસંદ કરો:</label>
+  <select id="taskFilter" onchange="filterTask()">
+    <option value="">-- Task પસંદ કરો --</option>
   </select>
 
   <button onclick="exportFilteredPDF()">Export Filtered PDF</button>
@@ -28,8 +37,8 @@
       <tr>
         <th>Cluster</th>
         <th>School</th>
-        <th> Task Description </th>
-        <th>Pen No.</th>
+        <th>Task Description</th>
+        <th>Due Date</th>
         <th>Status</th>
       </tr>
     </thead>
@@ -41,89 +50,119 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
   <script>
-    // ✅ Publish થયેલી JSON link મૂકો (tab name સાચું હોવું જોઈએ)
-    const sheetUrl = "https://docs.google.com/spreadsheets/d/1topaEo86sHDVPVXeLwkX7t3MOVscreNM8osUcyy8a1U/gviz/tq?tqx=out:json&sheet=ClusterData";
+    const { jsPDF } = window.jspdf;
+
+    // ✅ અહીં તમારી Base64 string paste કરો
+    const gujaratiFontData = `
+    AAEAAAAVAQAABABQR0RFRuh+GAsAASgoAACqPkdQT1PSlz2ZAA...
+    (તમારી full Base64 string અહીં મૂકો)
+    `;
+
+    // ✅ Register Gujarati font
+    jsPDF.API.addFileToVFS("NotoSansGujarati.ttf", gujaratiFontData);
+    jsPDF.API.addFont("NotoSansGujarati.ttf", "NotoSansGujarati", "normal");
+
+    // ✅ Google Sheet JSON link
+    const sheetUrl = "https://docs.google.com/spreadsheets/d/XXXXXX/gviz/tq?tqx=out:json&sheet=Sheet1";
 
     async function loadData() {
-      try {
-        const response = await fetch(sheetUrl);
-        const text = await response.text();
-        const json = JSON.parse(text.substr(47).slice(0, -2));
+      const response = await fetch(sheetUrl);
+      const text = await response.text();
+      const json = JSON.parse(text.substr(47).slice(0, -2));
 
-        const clusterSet = new Set();
-        const allRows = [];
+      const clusterSet = new Set();
+      const allRows = [];
 
-        json.table.rows.forEach(row => {
-          const cluster = row.c[0]?.v ? row.c[0].v.trim().toUpperCase() : "";
-          const school = row.c[1]?.v || "";
-          const task = row.c[2]?.v || "";
-          const due = row.c[3]?.v || "";
-          const status = row.c[4]?.v || "";
+      json.table.rows.forEach(row => {
+        const cluster = row.c[0]?.v ? row.c[0].v.trim().toUpperCase() : "";
+        const school = row.c[1]?.v || "";
+        const task = row.c[2]?.v || "";
+        const due = row.c[3]?.v || "";
+        const status = row.c[4]?.v || "";
 
-          if (!cluster) return;
+        if (!cluster) return;
 
-          const tr = document.createElement("tr");
-          const statusClass = status.toLowerCase() === "pending" ? "pending" : "completed";
-          tr.innerHTML = `
-            <td>${cluster}</td>
-            <td>${school}</td>
-            <td>${task}</td>
-            <td>${due}</td>
-            <td class="${statusClass}">${status}</td>
-          `;
-          allRows.push(tr);
-          clusterSet.add(cluster);
-        });
+        const tr = document.createElement("tr");
+        const statusClass = status.toLowerCase() === "pending" ? "pending" : "completed";
+        tr.innerHTML = `
+          <td>${cluster}</td>
+          <td>${school}</td>
+          <td>${task}</td>
+          <td>${due}</td>
+          <td class="${statusClass}">${status}</td>
+        `;
+        allRows.push(tr);
+        clusterSet.add(cluster);
+      });
 
-        // ✅ Dropdown reset + populate
-        const clusterFilter = document.getElementById("clusterFilter");
-        clusterFilter.innerHTML = '<option value="">-- પસંદ કરો --</option>';
-        Array.from(clusterSet).sort().forEach(c => {
-          const opt = document.createElement("option");
-          opt.value = c;
-          opt.textContent = c;
-          clusterFilter.appendChild(opt);
-        });
+      const clusterFilter = document.getElementById("clusterFilter");
+      clusterFilter.innerHTML = '<option value="">-- Cluster પસંદ કરો --</option>';
+      Array.from(clusterSet).sort().forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c;
+        opt.textContent = c;
+        clusterFilter.appendChild(opt);
+      });
 
-        document.querySelector("#taskTable tbody").innerHTML = "";
-        window.allRows = allRows;
-      } catch (err) {
-        console.error("Error loading data:", err);
-      }
+      window.allRows = allRows;
     }
 
-    function filterCluster() {
-      const filter = document.getElementById("clusterFilter").value;
+    function populateTasks() {
+      const cluster = document.getElementById("clusterFilter").value;
+      const taskSet = new Set();
+
+      window.allRows.forEach(row => {
+        const rowCluster = row.cells[0].textContent.trim().toUpperCase();
+        const task = row.cells[2].textContent.trim();
+        if (rowCluster === cluster) {
+          taskSet.add(task);
+        }
+      });
+
+      const taskFilter = document.getElementById("taskFilter");
+      taskFilter.innerHTML = '<option value="">-- Task પસંદ કરો --</option>';
+      Array.from(taskSet).forEach(t => {
+        const opt = document.createElement("option");
+        opt.value = t;
+        opt.textContent = t;
+        taskFilter.appendChild(opt);
+      });
+
+      document.querySelector("#taskTable tbody").innerHTML = "";
+    }
+
+    function filterTask() {
+      const cluster = document.getElementById("clusterFilter").value;
+      const task = document.getElementById("taskFilter").value;
       const tbody = document.querySelector("#taskTable tbody");
       tbody.innerHTML = "";
 
-      if (!filter) return;
-
       window.allRows.forEach(row => {
-        const cluster = row.cells[0].textContent.trim().toUpperCase();
-        if (cluster === filter) {
+        const rowCluster = row.cells[0].textContent.trim().toUpperCase();
+        const rowTask = row.cells[2].textContent.trim();
+        if (rowCluster === cluster && rowTask === task) {
           tbody.appendChild(row.cloneNode(true));
         }
       });
     }
 
     function exportFilteredPDF() {
-      const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
+      doc.setFont("NotoSansGujarati"); // Gujarati font set
 
-      doc.text("Cluster School Tasks", 14, 16);
+      doc.text("ક્લસ્ટર મુજબ શાળાની બાકી કામગીરી", 14, 16);
 
       const rows = Array.from(document.querySelectorAll("#taskTable tbody tr")).map(tr =>
         Array.from(tr.cells).map(td => td.textContent)
       );
 
       if (rows.length === 0) {
-        alert("કોઈ cluster select નથી કર્યું અથવા rows નથી.");
+        alert("કોઈ Cluster અથવા Task select નથી કર્યું.");
         return;
       }
 
       doc.autoTable({
-        head: [['Cluster', 'School', 'Task Description', 'Pen No.', 'Status']],
+        head: [['Cluster', 'School', 'Task Description', 'Due Date', 'Status']],
         body: rows,
         startY: 25
       });
@@ -131,7 +170,6 @@
       doc.save("Filtered_Cluster_Tasks.pdf");
     }
 
-    // ✅ First load
     loadData();
   </script>
 </body>
