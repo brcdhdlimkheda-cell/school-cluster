@@ -11,20 +11,35 @@
     <option value="">-- ક્લસ્ટર પસંદ કરો --</option>
   </select>
 
+  <h3>Details:</h3>
+  <table border="1" id="details">
+    <thead>
+      <tr>
+        <th>School</th>
+        <th>Task Description-1</th>
+        <th>Pen No.</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
   <script>
     const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSh45K32G2Zt8LCBcIBgxx64qZtNtCrwKltz80WDg9LFddf4VK4xTDMFf63VIqnkwy1UKlhy0HbJryY/pub?output=csv";
+
+    let allData = [];
 
     fetch(sheetUrl)
       .then(res => res.text())
       .then(text => {
         const parsed = Papa.parse(text, { header: true });
-        const allData = parsed.data;
+        allData = parsed.data;
 
-        // Debug: print headers
+        // Debug: print actual header keys
         console.log("Headers:", Object.keys(allData[0]));
 
         // Populate Cluster dropdown
-        const clusters = [...new Set(allData.map(r => r.Cluster?.trim()).filter(Boolean))];
+        const clusters = [...new Set(allData.map(r => (r.Cluster || r["Cluster "] || "").trim()).filter(Boolean))];
         const select = document.getElementById("cluster");
         clusters.forEach(c => {
           const opt = document.createElement("option");
@@ -33,6 +48,24 @@
           select.appendChild(opt);
         });
       });
+
+    // On cluster change → show details
+    document.getElementById("cluster").addEventListener("change", e => {
+      const cluster = e.target.value;
+      const tbody = document.querySelector("#details tbody");
+      tbody.innerHTML = "";
+
+      allData.filter(r => (r.Cluster || r["Cluster "] || "").trim() === cluster).forEach(r => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${r.School || ""}</td>
+          <td>${r["Task Description-1"] || ""}</td>
+          <td>${r["Pen No."] || ""}</td>
+          <td>${r.Status || ""}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    });
   </script>
 </body>
 </html>
