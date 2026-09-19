@@ -20,19 +20,20 @@
     // Gujarati font Base64 string (Shruti.ttf)
     const gujaratiFontData = `AAEAAA...LONG_BASE64_STRING...==`;
 
-    // Register font with jsPDF
     jsPDF.API.addFileToVFS("Shruti.ttf", gujaratiFontData);
     jsPDF.API.addFont("Shruti.ttf", "Shruti", "normal");
 
-    // Google Sheet CSV link (published link)
+    // Your published CSV link
     const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSh45K32G2Zt8LCBcIBgxx64qZtNtCrwKltz80WDg9LFddf4VK4xTDMFf63VIqnkwy1UKlhy0HbJryY/pub?output=csv";
 
-    // Populate dropdown from CSV (skip header row)
+    // Populate dropdown from CSV
     fetch(sheetUrl)
       .then(res => res.text())
       .then(text => {
         const rows = text.split("\n");
         const select = document.getElementById("cluster");
+
+        // Skip header row
         rows.slice(1).forEach(row => {
           const value = row.trim();
           if (value) {
@@ -42,9 +43,10 @@
             select.appendChild(opt);
           }
         });
-      });
+      })
+      .catch(err => console.error("CSV fetch error:", err));
 
-    // Generate PDF with Gujarati font + selected cluster
+    // Generate PDF
     document.getElementById("download").addEventListener("click", () => {
       const clusterValue = document.getElementById("cluster").value;
       const doc = new jsPDF();
