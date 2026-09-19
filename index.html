@@ -94,7 +94,7 @@
           });
 
           doc.setFont("helvetica", "normal");
-          doc.setFontSize(12);
+          doc.setFontSize(10); // heading font size
 
           doc.text("Selected Cluster: " + cluster, 14, 20);
 
@@ -102,7 +102,7 @@
             startY: 30,
             head: [["School", "Task Description-1", "Pen No.", "Status"]],
             body: rows,
-            styles: { font: "helvetica", fontSize: 10 },
+            styles: { font: "helvetica", fontSize: 8 }, // smaller font size
             margin: { left: 14, right: 14 }
           });
 
