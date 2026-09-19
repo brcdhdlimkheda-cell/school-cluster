@@ -24,24 +24,26 @@
     jsPDF.API.addFileToVFS("Shruti.ttf", gujaratiFontData);
     jsPDF.API.addFont("Shruti.ttf", "Shruti", "normal");
 
-    // Fetch cluster list from Google Apps Script WebApp
-    // Replace with your deployed WebApp URL
-    const sheetUrl = "YOUR_GOOGLE_APPS_SCRIPT_WEBAPP_URL";
+    // Google Sheet CSV link (your published link)
+    const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSh45K32G2Zt8LCBcIBgxx64qZtNtCrwKltz80WDg9LFddf4VK4xTDMFf63VIqnkwy1UKlhy0HbJryY/pub?output=csv";
 
+    // Populate dropdown from CSV
     fetch(sheetUrl)
-      .then(res => res.json())
-      .then(data => {
+      .then(res => res.text())
+      .then(text => {
+        const rows = text.split("\n");
         const select = document.getElementById("cluster");
-        data.forEach(row => {
-          if (row[0]) {
+        rows.forEach(row => {
+          if (row.trim()) {
             const opt = document.createElement("option");
-            opt.value = row[0];
-            opt.textContent = row[0];
+            opt.value = row.trim();
+            opt.textContent = row.trim();
             select.appendChild(opt);
           }
         });
       });
 
+    // Generate PDF with Gujarati font + selected cluster
     document.getElementById("download").addEventListener("click", () => {
       const clusterValue = document.getElementById("cluster").value;
       const doc = new jsPDF();
