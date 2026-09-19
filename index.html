@@ -33,15 +33,16 @@
     const sheetUrl = "YOUR_PUBLISHED_CSV_LINK"; // replace with your Google Sheet CSV link
     let allData = [];
 
+    // Load CSV
     fetch(sheetUrl)
       .then(res => res.text())
       .then(text => {
         const parsed = Papa.parse(text, { header: true });
         allData = parsed.data;
 
-        console.log("Headers:", Object.keys(allData[0])); // check actual keys
+        console.log("Headers:", Object.keys(allData[0])); // debug
 
-        // Use exact header name seen in console
+        // Populate Cluster dropdown
         const clusters = [...new Set(allData.map(r => (r["Cluster"] || "").trim()).filter(Boolean))];
         const select = document.getElementById("cluster");
         clusters.forEach(c => {
@@ -52,6 +53,7 @@
         });
       });
 
+    // On cluster change → show details
     document.getElementById("cluster").addEventListener("change", e => {
       const cluster = e.target.value;
       const tbody = document.querySelector("#details tbody");
@@ -69,6 +71,7 @@
       });
     });
 
+    // PDF export
     document.getElementById("download").addEventListener("click", () => {
       const cluster = document.getElementById("cluster").value;
       const doc = new jsPDF();
