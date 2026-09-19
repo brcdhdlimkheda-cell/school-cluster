@@ -34,13 +34,11 @@
     // Gujarati font Base64 string (Shruti.ttf)
     const gujaratiFontData = `AAEAAA...LONG_BASE64_STRING...==`;
 
-    jsPDF.API.addFileToVFS("Shruti.ttf", gujaratiFontData);
-    jsPDF.API.addFont("Shruti.ttf", "Shruti", "normal");
-
     const sheetUrl = "YOUR_PUBLISHED_CSV_LINK";
 
     let allData = [];
 
+    // Load CSV with PapaParse
     fetch(sheetUrl)
       .then(res => res.text())
       .then(text => {
@@ -50,7 +48,7 @@
         // Debug: print actual header keys
         console.log("Headers:", Object.keys(allData[0]));
 
-        // Use exact header name seen in console
+        // Populate Cluster dropdown (unique values)
         const clusters = [...new Set(allData.map(r => (r.Cluster || r["Cluster "] || r.cluster || "").trim()).filter(Boolean))];
         const select = document.getElementById("cluster");
         clusters.forEach(c => {
@@ -61,6 +59,7 @@
         });
       });
 
+    // On cluster change → show details
     document.getElementById("cluster").addEventListener("change", e => {
       const cluster = e.target.value;
       const tbody = document.querySelector("#details tbody");
@@ -78,9 +77,14 @@
       });
     });
 
+    // PDF export
     document.getElementById("download").addEventListener("click", () => {
       const cluster = document.getElementById("cluster").value;
       const doc = new jsPDF();
+
+      // Correct jsPDF v2.5+ font embed syntax
+      doc.addFileToVFS("Shruti.ttf", gujaratiFontData);
+      doc.addFont("Shruti.ttf", "Shruti", "normal");
       doc.setFont("Shruti");
       doc.setFontSize(14);
 
