@@ -30,10 +30,10 @@
 
   <script>
     const { jsPDF } = window.jspdf;
-    const sheetUrl = "YOUR_PUBLISHED_CSV_LINK"; // replace with your Google Sheet CSV link
+    const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSh45K32G2Zt8LCBcIBgxx64qZtNtCrwKltz80WDg9LFddf4VK4xTDMFf63VIqnkwy1UKlhy0HbJryY/pub?output=csv";
+
     let allData = [];
 
-    // Load CSV
     fetch(sheetUrl)
       .then(res => res.text())
       .then(text => {
@@ -53,7 +53,6 @@
         });
       });
 
-    // On cluster change → show details
     document.getElementById("cluster").addEventListener("change", e => {
       const cluster = e.target.value;
       const tbody = document.querySelector("#details tbody");
@@ -71,7 +70,6 @@
       });
     });
 
-    // PDF export
     document.getElementById("download").addEventListener("click", () => {
       const cluster = document.getElementById("cluster").value;
       const doc = new jsPDF();
