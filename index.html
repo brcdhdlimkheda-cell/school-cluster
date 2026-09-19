@@ -48,6 +48,9 @@
         const parsed = Papa.parse(text, { header: true });
         allData = parsed.data;
 
+        // Debug: print actual header keys
+        console.log("Headers:", Object.keys(allData[0]));
+
         // Populate Cluster dropdown (unique values)
         const clusters = [...new Set(allData.map(r => (r.Cluster || "").trim()).filter(Boolean))];
         const select = document.getElementById("cluster");
