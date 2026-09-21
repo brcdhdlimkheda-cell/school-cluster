@@ -60,81 +60,71 @@
       const tbody = document.querySelector("#details tbody");
       tbody.innerHTML = "";
 
-      // Remove old task select + button if exists
-      const oldTask = document.getElementById("task");
-      if (oldTask) oldTask.remove();
+      // Clear old task + button
+      const taskTitle = document.getElementById("taskTitle");
+      taskTitle.innerHTML = "";
       const oldBtn = document.getElementById("download");
       if (oldBtn) oldBtn.remove();
 
-      if (cluster) {
-        // Task dropdown
-        const taskTitle = document.getElementById("taskTitle");
+      if(cluster){
+        // Create Task dropdown
         taskTitle.innerHTML = "Select Task: ";
         const taskSelect = document.createElement("select");
         taskSelect.id = "task";
         taskTitle.appendChild(taskSelect);
 
-        // Populate tasks
+        // Populate tasks from Task Description column
         const tasks = [];
-        allData.filter(r => (r["Cluster"] || "").trim() === cluster).forEach(r => {
+        allData.filter(r => (r["Cluster"]||"").trim()===cluster).forEach(r=>{
           if(r["Task Description"]) tasks.push(r["Task Description"].trim());
         });
-        const uniqueTasks = [...new Set(tasks)];
-        uniqueTasks.forEach(t => {
-          const opt = document.createElement("option");
-          opt.value = t;
-          opt.textContent = t;
+        [...new Set(tasks)].forEach(t=>{
+          const opt=document.createElement("option");
+          opt.value=t; opt.textContent=t;
           taskSelect.appendChild(opt);
         });
 
-        // On task change → filter rows
-        taskSelect.addEventListener("change", ev => {
-          const task = ev.target.value;
-          tbody.innerHTML = "";
+        // On task change → filter rows + show download button
+        taskSelect.addEventListener("change", ev=>{
+          const task=ev.target.value;
+          tbody.innerHTML="";
+          const rows=[];
+          allData.filter(r=>
+            (r["Cluster"]||"").trim()===cluster &&
+            (r["Task Description"]||"").trim()===task
+          ).forEach(r=>{
+            const tr=document.createElement("tr");
+            tr.innerHTML=`<td>${r["School"]||""}</td>
+                          <td>${r["Task Description"]||""}</td>
+                          <td>${r["Pen No."]||""}</td>
+                          <td>${r["Status"]||""}</td>`;
+            tbody.appendChild(tr);
+            rows.push([r["School"]||"", r["Task Description"]||"", r["Pen No."]||"", r["Status"]||""]);
+          });
 
-          // Remove old button if exists
-          const oldBtn2 = document.getElementById("download");
-          if (oldBtn2) oldBtn2.remove();
+          // Show Download button
+          let oldBtn2=document.getElementById("download");
+          if(oldBtn2) oldBtn2.remove();
+          const btn=document.createElement("button");
+          btn.id="download"; btn.textContent="Download PDF";
+          taskTitle.appendChild(btn);
 
-          if (task) {
-            const title = document.getElementById("clusterTitle");
-            const btn = document.createElement("button");
-            btn.id = "download";
-            btn.textContent = "Download PDF";
-            title.appendChild(btn);
-
-            const rows = [];
-            allData.filter(r => 
-              (r["Cluster"]||"").trim()===cluster &&
-              (r["Task Description"]||"").trim()===task
-            ).forEach(r => {
-              const tr = document.createElement("tr");
-              tr.innerHTML = `
-                <td>${r["School"] || ""}</td>
-                <td>${r["Task Description"] || ""}</td>
-                <td>${r["Pen No."] || ""}</td>
-                <td>${r["Status"] || ""}</td>
-              `;
-              tbody.appendChild(tr);
-
-              rows.push([r["School"] || "", r["Task Description"] || "", r["Pen No."] || "", r["Status"] || ""]);
+          btn.addEventListener("click", ()=>{
+            const doc=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
+            doc.setFont("helvetica","bold"); doc.setFontSize(14);
+            doc.text("Cluster: "+cluster+" | Task: "+task,14,20);
+            doc.autoTable({
+              startY:30,
+              head:[["School","Task Description","Pen No.","Status"]],
+              body:rows,
+              styles:{font:"helvetica",fontSize:5},
+              margin:{left:14,right:14}
             });
-
-            // Button action → PDF export
-            btn.addEventListener("click", () => {
-              const doc = new jsPDF({
-                orientation: "portrait",
-                unit: "mm",
-                format: "a4"
-              });
-
-              // Heading
-              doc.setFont("helvetica", "bold");
-              doc.setFontSize(14);
-              doc.text("Cluster: " + cluster + " | Task: " + task, 14, 20);
-
-              // Table with font size 5
-              doc.setFont("helvetica", "normal");
-              doc.autoTable({
-                startY: 30,
-                head: [["School", "Task Description", "Pen No.", "Status"]],
+            doc.save(cluster+"-"+task+"-data.pdf");
+          });
+        });
+      }
+    });
+  </script>
+</body>
+</html>
