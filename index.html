@@ -32,7 +32,7 @@
 
   <script>
     const { jsPDF } = window.jspdf;
-    const sheetUrl = "YOUR_GOOGLE_SHEET_CSV_LINK";
+    const sheetUrl = "YOUR_GOOGLE_SHEET_CSV_LINK"; // અહીં તમારો CSV link મૂકો
 
     let allData = [];
 
@@ -68,7 +68,10 @@
 
       if(cluster){
         // Create Task dropdown
-        taskTitle.innerHTML = "Select Task: ";
+        const label = document.createElement("span");
+        label.textContent = "Select Task: ";
+        taskTitle.appendChild(label);
+
         const taskSelect = document.createElement("select");
         taskSelect.id = "task";
         taskTitle.appendChild(taskSelect);
