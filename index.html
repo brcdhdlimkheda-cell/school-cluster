@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Cluster Data Viewer</title>
+  <title>Cluster & Task Data Viewer</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
@@ -15,12 +15,14 @@
     </select>
   </h2>
 
+  <h3 id="taskTitle"></h3>
+
   <h3>Details:</h3>
   <table border="1" id="details">
     <thead>
       <tr>
         <th>School</th>
-        <th>Task Description-1</th>
+        <th>Task Description</th>
         <th>Pen No.</th>
         <th>Status</th>
       </tr>
@@ -52,66 +54,87 @@
         });
       });
 
-    // On cluster change → show details + button
+    // On cluster change → show task dropdown
     document.getElementById("cluster").addEventListener("change", e => {
       const cluster = e.target.value;
       const tbody = document.querySelector("#details tbody");
       tbody.innerHTML = "";
 
-      // Remove old button if exists
+      // Remove old task select + button if exists
+      const oldTask = document.getElementById("task");
+      if (oldTask) oldTask.remove();
       const oldBtn = document.getElementById("download");
       if (oldBtn) oldBtn.remove();
 
       if (cluster) {
-        // Show cluster name + button
-        const title = document.getElementById("clusterTitle");
-        const btn = document.createElement("button");
-        btn.id = "download";
-        btn.textContent = "Download PDF";
-        title.appendChild(btn);
+        // Task dropdown
+        const taskTitle = document.getElementById("taskTitle");
+        taskTitle.innerHTML = "Select Task: ";
+        const taskSelect = document.createElement("select");
+        taskSelect.id = "task";
+        taskTitle.appendChild(taskSelect);
 
-        // Fill table
-        const rows = [];
+        // Populate tasks
+        const tasks = [];
         allData.filter(r => (r["Cluster"] || "").trim() === cluster).forEach(r => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${r["School"] || ""}</td>
-            <td>${r["Task Description-1"] || ""}</td>
-            <td>${r["Pen No."] || ""}</td>
-            <td>${r["Status"] || ""}</td>
-          `;
-          tbody.appendChild(tr);
-
-          rows.push([r["School"] || "", r["Task Description-1"] || "", r["Pen No."] || "", r["Status"] || ""]);
+          if(r["Task Description"]) tasks.push(r["Task Description"].trim());
+        });
+        const uniqueTasks = [...new Set(tasks)];
+        uniqueTasks.forEach(t => {
+          const opt = document.createElement("option");
+          opt.value = t;
+          opt.textContent = t;
+          taskSelect.appendChild(opt);
         });
 
-        // Button action → PDF export
-        btn.addEventListener("click", () => {
-          const doc = new jsPDF({
-            orientation: "portrait",
-            unit: "mm",
-            format: "a4"
-          });
+        // On task change → filter rows
+        taskSelect.addEventListener("change", ev => {
+          const task = ev.target.value;
+          tbody.innerHTML = "";
 
-          // Heading
-          doc.setFont("helvetica", "bold");
-          doc.setFontSize(14);
-          doc.text("Cluster: " + cluster, 14, 20);
+          // Remove old button if exists
+          const oldBtn2 = document.getElementById("download");
+          if (oldBtn2) oldBtn2.remove();
 
-          // Table with font size 5
-          doc.setFont("helvetica", "normal");
-          doc.autoTable({
-            startY: 30,
-            head: [["School", "Task Description-1", "Pen No.", "Status"]],
-            body: rows,
-            styles: { font: "helvetica", fontSize: 8 },
-            margin: { left: 14, right: 14 }
-          });
+          if (task) {
+            const title = document.getElementById("clusterTitle");
+            const btn = document.createElement("button");
+            btn.id = "download";
+            btn.textContent = "Download PDF";
+            title.appendChild(btn);
 
-          doc.save(cluster + "-data.pdf");
-        });
-      }
-    });
-  </script>
-</body>
-</html>
+            const rows = [];
+            allData.filter(r => 
+              (r["Cluster"]||"").trim()===cluster &&
+              (r["Task Description"]||"").trim()===task
+            ).forEach(r => {
+              const tr = document.createElement("tr");
+              tr.innerHTML = `
+                <td>${r["School"] || ""}</td>
+                <td>${r["Task Description"] || ""}</td>
+                <td>${r["Pen No."] || ""}</td>
+                <td>${r["Status"] || ""}</td>
+              `;
+              tbody.appendChild(tr);
+
+              rows.push([r["School"] || "", r["Task Description"] || "", r["Pen No."] || "", r["Status"] || ""]);
+            });
+
+            // Button action → PDF export
+            btn.addEventListener("click", () => {
+              const doc = new jsPDF({
+                orientation: "portrait",
+                unit: "mm",
+                format: "a4"
+              });
+
+              // Heading
+              doc.setFont("helvetica", "bold");
+              doc.setFontSize(14);
+              doc.text("Cluster: " + cluster + " | Task: " + task, 14, 20);
+
+              // Table with font size 5
+              doc.setFont("helvetica", "normal");
+              doc.autoTable({
+                startY: 30,
+                head: [["School", "Task Description", "Pen No.", "Status"]],
